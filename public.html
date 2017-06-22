@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html>
+<body>
+<h1>Sound Detection Program</h1>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script type="text/javascript"> 
+google.load('visualization', '1', {packages: ['corechart', 'line']});
+google.setOnLoadCallback(start);
+
+function start() {
+    var j = 0;//index
+    var db1 = []; //array for all db values
+    var options = {
+        curveType:"function",
+		hAxis: {
+		  title: 'Time' //set the title for the x-axis
+		},
+		vAxis: {
+		  title: 'Decibel' //set the title for the y-axis
+		},
+		backgroundColor: '#f1f8e9',
+		animation: { //animation at the beginning of the graph
+		    duration: 250,
+		    easing: "linear",
+		    startup : true
+		}
+		};
+		
+	var data = new google.visualization.DataTable(); //add a legend
+				data.addColumn('number', 'X');
+				data.addColumn('number', 'Decibel');
+				
+	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));		
+
+	setInterval(run,1000);//the graph update every 1 second
+	
+	function run() { //function for updating the graph data
+	    var sum = 0;
+		$.ajax({
+			url: 'output.php', //data source
+			async: true, //the script will be run asynchronously as soon as it is available
+			success: function(charData){ //function will run if the response is received
+			    if(charData){	
+			    var db = charData.trim().split(" ");//split the string in the text file into array data
+			    for (i = 0; i < db.length; i++) {
+			        sum += parseFloat(db[i]); 		        
+			    }//calculate the sum of 8 data pieces
+			    ave = sum / 8; //calculate the average of 8 data pieces
+			    db1.push(ave); //ad the value to an array
+			    data.addRow([j, (db1[j])]); //add row
+			   chart.draw(data, options); //update the chart
+			   j++; //increase the new row index
+
+			   if (data.getNumberOfRows()>10) //the graph will keep 10 seconds of history
+			   {
+                   data.removeRow(0);
+			   }
+			    } 
+			},
+
+		})
+	}	
+}
+</script>
+</body>
+<div id="chart_div"></div>
+</html>
